@@ -1,0 +1,71 @@
+name: agent-brain
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agent_brain
+      POSTGRES_USER: agent_brain
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run Install-AgentBrain.ps1 first}
+    volumes:
+      - brain-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U agent_brain -d agent_brain']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  ollama:
+    image: ollama/ollama:0.13.5
+    restart: unless-stopped
+    volumes:
+      - brain-models:/root/.ollama
+  model-init:
+    image: ollama/ollama:0.13.5
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: [/bin/sh, -c]
+    command: ['until ollama list >/dev/null 2>&1; do sleep 2; done; if ollama show embeddinggemma >/dev/null 2>&1; then echo "embeddinggemma already available"; else ollama pull embeddinggemma; fi']
+    depends_on:
+      - ollama
+  mcp:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://agent_brain:${DB_PASSWORD}@postgres:5432/agent_brain
+      OLLAMA_URL: http://ollama:11434
+      EMBEDDING_MODEL: embeddinggemma
+    ports:
+      - '127.0.0.1:${BRAIN_PORT:-8765}:8765'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      model-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, python, health.py]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 30s
+  dashboard:
+    build: ./server
+    command: [uvicorn, 'dashboard:app', --host, '0.0.0.0', --port, '8080', --no-access-log]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://agent_brain:${DB_PASSWORD}@postgres:5432/agent_brain
+      OLLAMA_URL: http://ollama:11434
+      EMBEDDING_MODEL: embeddinggemma
+    ports:
+      - '127.0.0.1:${DASHBOARD_PORT:-8766}:8080'
+    depends_on:
+      mcp:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+volumes:
+  brain-data:
+  brain-models:

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark"><meta name="theme-color" content="#101416">
+  <title>agent-brain · Wissensspeicher</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/style.css"><link rel="stylesheet" href="/assets/map.css"><script src="/assets/app.js" defer></script><script src="/assets/map.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Zum Inhalt</a>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="agent-brain Startseite"><span class="brand-icon">✳</span><span>agent-brain<span class="brand-sub">DEIN GEMEINSAMES GEDÄCHTNIS</span></span></a>
+    <div class="workspace"><span class="workspace-dot"></span> Persönlicher Wissensraum <span class="local-label">LOKAL</span></div>
+    <div class="nav-label">BIBLIOTHEK</div>
+    <nav aria-label="Wissensbereiche">
+      <button class="nav-button selected" data-view="active"><span class="nav-symbol">◈</span> Wissen <span id="nav-active" class="nav-count">—</span></button>
+      <button class="nav-button" data-view="archived"><span class="nav-symbol">▤</span> Archiv <span id="nav-archived" class="nav-count">—</span></button>
+      <button class="nav-button" id="map-nav"><span class="nav-symbol">⌘</span> Wissenskarte</button>
+    </nav>
+    <div class="nav-label scopes-label">BEREICHE <span id="scope-count"></span></div>
+    <nav id="scope-nav" aria-label="Projektfilter"><button class="scope-button selected" data-scope="">Alle Bereiche</button></nav>
+    <div class="sidebar-bottom"><span class="connection-dot" id="connection-dot"></span><div id="connection-text">Verbindung wird geprüft<span>Wissen bleibt auf deinem PC</span></div></div>
+  </aside>
+  <main id="main">
+    <header class="topbar"><span>Arbeitsbereich <span class="breadcrumb-separator">/</span> <strong id="breadcrumb">Wissen</strong></span><span class="read-only">◉ &nbsp; Leseansicht</span></header>
+    <section class="page-heading"><div><div class="eyebrow">WISSEN, DAS BLEIBT</div><h1 id="page-title">Dein Brain. Im Überblick.</h1><p id="page-description">Was deine Agenten gelernt haben — an einem Ort.</p></div><button id="refresh" class="secondary-button"><span aria-hidden="true">↻</span> Aktualisieren</button></section>
+    <section class="stats" aria-label="Wissensübersicht">
+      <div class="stat"><div class="stat-label">Aktives Wissen <span class="stat-icon">◈</span></div><strong id="stat-active">—</strong><span>Einträge im Gedächtnis</span></div>
+      <div class="stat"><div class="stat-label">Projektbereiche <span class="stat-icon">⌘</span></div><strong id="stat-projects">—</strong><span>Wissen mit eigenem Kontext</span></div>
+      <div class="stat"><div class="stat-label">Archiviert <span class="stat-icon">▤</span></div><strong id="stat-archived">—</strong><span>Mit Historie aufbewahrt</span></div>
+      <div class="stat activity-stat"><div class="stat-label">Letzte Änderung <span class="stat-icon">◷</span></div><strong id="stat-latest">—</strong><span id="stat-latest-time">Noch keine Aktivität</span></div>
+    </section>
+    <section class="library" aria-label="Wissenseinträge">
+      <div class="library-heading"><div><h2 id="library-title">Wissensbibliothek</h2><span id="result-count">Einträge werden geladen …</span></div><span class="live-label"><span></span> Aktualisiert automatisch</span></div>
+      <form id="filters" class="filters" role="search">
+        <label class="search-box"><span aria-hidden="true">⌕</span><span class="sr-only">Wissen durchsuchen</span><input id="search" type="search" placeholder="Titel, Inhalt oder Quelle durchsuchen …" maxlength="500" autocomplete="off"></label>
+        <label><span class="sr-only">Wissensart</span><select id="kind"><option value="">Alle Arten</option><option value="fact">Fakten</option><option value="decision">Entscheidungen</option><option value="preference">Präferenzen</option><option value="procedure">Vorgehensweisen</option><option value="summary">Zusammenfassungen</option></select></label>
+        <label><span class="sr-only">Sortierung</span><select id="sort"><option value="updated">Zuletzt geändert</option><option value="created">Zuletzt erstellt</option><option value="title">Titel A–Z</option></select></label>
+      </form>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <div id="memory-grid" class="memory-grid" aria-live="polite" aria-busy="true"></div>
+      <div id="empty" class="empty" hidden><div class="empty-icon">◈</div><h3 id="empty-title">Hier entsteht dein Wissen.</h3><p id="empty-description">Sobald ein Agent hilfreiches Wissen speichert, erscheint es hier.</p><button id="reset-filters" class="secondary-button" hidden>Filter zurücksetzen</button></div>
+      <div class="pagination" id="pagination" hidden><button id="previous" class="secondary-button">← Zurück</button><span id="page-number"></span><button id="next" class="secondary-button">Weiter →</button></div>
+    </section>
+    <section id="map-section" class="knowledge-map-section" aria-label="Wissenskarte" hidden>
+      <div class="map-heading"><div><h2>Wie dein Wissen zusammenhängt</h2><p>Ähnliche Inhalte sind verbunden. Stelle eine Frage, um den gemeinsamen Kontext zu sehen.</p></div><span class="live-label"><span></span> Auf Basis deiner Embeddings</span></div>
+      <form id="question-form" class="question-form">
+        <label class="question-field"><span>DEINE FRAGE</span><input id="question" placeholder="Zum Beispiel: Wie funktioniert agent-brain?" maxlength="4000" required autocomplete="off"></label>
+        <label class="question-scope"><span>WISSENSBEREICH</span><select id="question-project"><option value="">Globales Wissen</option></select></label>
+        <button id="ask-question" class="primary-button" type="submit">Kontext anzeigen <span>↗</span></button>
+      </form>
+      <details class="query-options"><summary>Suchparameter <span>Wie beim Agenten: 5 Treffer · Ähnlichkeit ab 0,25 · 6000 Zeichen</span></summary><div><label>Maximale Treffer<input id="query-limit" type="number" value="5" min="1" max="30" required></label><label>Minimale Ähnlichkeit<input id="query-threshold" type="number" value="0.25" min="0" max="1" step="0.01" required></label><label>Kontextlimit (Zeichen)<input id="query-budget" type="number" value="6000" min="6000" max="30000" step="1000" required></label></div></details>
+      <div id="map-error" class="error-banner" role="alert" hidden></div>
+      <div class="map-controls"><label>Kartenbereich <select id="map-scope"><option value="">Alle Bereiche</option><option value="global">Global</option></select></label><label class="edge-filter">Linien ab Ähnlichkeit <input id="edge-threshold" type="range" min="0" max="1" step="0.05" value="0.15"><output id="edge-value">0,15</output></label><button id="clear-question" class="secondary-button" hidden>Frage zurücksetzen</button></div>
+      <div class="map-layout">
+        <div class="map-canvas"><div class="map-canvas-top"><span id="map-count">Karte wird geladen …</span><div class="map-zoom"><button id="zoom-in" class="icon-button" aria-label="Karte vergrößern">+</button><button id="zoom-out" class="icon-button" aria-label="Karte verkleinern">−</button><button id="fit-map" class="icon-button" aria-label="Karte einpassen">⌖</button></div></div><svg id="knowledge-map" viewBox="0 0 1000 600" role="group" aria-label="Interaktive Wissenskarte"></svg><p id="map-empty" hidden>Noch kein aktives Wissen in diesem Bereich.</p><div class="map-legend"><span class="legend-related">Wissenseintrag</span><span class="legend-hit">Im Frage-Kontext</span><span class="legend-question">Deine Frage</span></div></div>
+        <aside class="map-inspector" aria-label="Karteninformationen"><div class="eyebrow">VERBINDUNGEN VERSTEHEN</div><div id="node-inspector"><h3>Eintrag auswählen</h3><p>Klicke auf einen Punkt, um seine Verbindungen und den Inhalt zu sehen.</p></div><div id="retrieval-results" hidden></div></aside>
+      </div>
+      <p id="map-note" class="map-note">Linien zeigen Kosinus-Ähnlichkeit: höher bedeutet ähnlicher, nicht sicherer. Die Netzwerkanordnung ist vereinfacht; räumliche Abstände sind keine exakten Messwerte. Jeder Eintrag wählt bis zu vier nächste Nachbarn; die Linien beider Richtungen werden zusammen angezeigt. Archivierte Einträge sind ausgeschlossen.</p>
+      <p class="map-note">Die Frage-Vorschau nutzt dieselbe Suche wie <code>brain_search</code>. Ein Agent kann andere Suchbegriffe oder Parameter wählen. Deine Fragen werden nicht gespeichert.</p>
+    </section>
+    <footer class="page-footer"><span>Gemeinsames Wissen. Klare Quellen. Nachvollziehbare Änderungen.</span><span id="last-sync">Warte auf erste Aktualisierung</span></footer>
+  </main>
+  <dialog id="detail-dialog" aria-labelledby="detail-title"><div class="detail-top"><span class="eyebrow">WISSENSEINTRAG</span><button id="close-detail" class="icon-button" aria-label="Details schließen">×</button></div><div id="detail-content"></div></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
